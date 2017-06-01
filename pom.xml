@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>info.kuechler.gpx</groupId>
+	<artifactId>model</artifactId>
+	<version>1.1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<!-- 
+		settings for maven central and sign:
+		
+		<settings>
+			<servers>
+				<server>
+					<id>ossrh</id>
+					<username>username</username>
+					<password>password</password>
+				</server>
+			</servers>
+			<profiles>
+				<profile>
+					<id>ossrh</id>
+					<activation>
+						<activeByDefault>true</activeByDefault>
+					</activation>
+					<properties>
+						<gpg.executable>/usr/local/bin/gpg</gpg.executable>
+						<gpg.passphrase>passphrase</gpg.passphrase>
+					</properties>
+				</profile>
+			</profiles>
+		</settings>
+		release into maven central:
+		mvn clean deploy -P release, <autoReleaseAfterClose> have to set to "false"
+		mvn nexus-staging:release -P release
+	 -->
+	 
+	<name>GPX-model</name>
+
+	<description>Generated classes from GPX 1.1 format.</description>
+	<url>https://github.com/admiralsmaster/gpx-model</url>
+	<inceptionYear>2017</inceptionYear>
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/admiralsmaster/gpx-model/issues</url>
+	</issueManagement>
+	<licenses>
+		<license>
+			<distribution>repo</distribution>
+			<name>The MIT License (MIT)</name>
+			<url>http://opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Ariel Küchler</name>
+			<url>https://github.com/admiralsmaster</url>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:admiralsmaster/gpx-model.git</connection>
+		<developerConnection>scm:git:git@github.com:admiralsmaster/gpx-model.git</developerConnection>
+		<url>git@github.com:admiralsmaster/gpx-model.git</url>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.java.version>1.8</project.java.version>
+		<file.download.target>${project.build.directory}/download-files</file.download.target>
+		<project.generated.directory>${project.build.directory}/generated-sources/jaxb</project.generated.directory>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<source>${project.java.version}</source>
+					<target>${project.java.version}</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>download-single</goal>
+						</goals>
+						<configuration>
+							<url>http://www.topografix.com</url>
+							<fromFile>GPX/1/1/gpx.xsd</fromFile>
+							<toFile>${file.download.target}/gpx.xsd</toFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>2.3.1</version>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<outputDirectory>${project.generated.directory}</outputDirectory>
+					<packageName>info.kuechler.gpx</packageName>
+					<sources>
+						<source>${file.download.target}</source>
+					</sources>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.generated.directory}</source>
+							</sources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>add-resource</id>
+						<goals>
+							<goal>add-resource</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>${file.download.target}</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<!-- profile for release, local development is faster w/o this plugins -->
+			<id>release</id>
+
+			<!-- snapshot repository for release -->
+			<distributionManagement>
+				<snapshotRepository>
+					<id>ossrh</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+			</distributionManagement>
+
+			<build>
+				<plugins>
+
+					<!-- right java version, no release with higher java version -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>1.4.1</version>
+						<executions>
+							<execution>
+								<id>display-info</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>display-info</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>enforce-versions</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>enforce</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<requireJavaVersion>
+											<version>[${project.java.version},1.9)</version>
+										</requireJavaVersion>
+									</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- create source jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>3.0.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- create javadoc jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.4</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- sign files -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- plugin for release -->
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.8</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>false</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+					
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+</project>
