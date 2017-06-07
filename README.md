@@ -2,3 +2,12 @@ GPX Model [![Build Status](https://travis-ci.org/admiralsmaster/gpx-model.svg?br
 ==========
 
 Generated classes from GPX 1.1 format.
+
+```xml
+<dependency>
+    <groupId>info.kuechler.gpx</groupId>
+    <artifactId>model</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
+See [here](http://search.maven.org/#artifactdetails|info.kuechler.gpx|model|1.1.0|jar)
